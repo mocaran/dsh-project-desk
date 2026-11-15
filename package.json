@@ -1,0 +1,62 @@
+{
+    "name":  "dsh-project-desk",
+    "version":  "0.1.6",
+    "description":  "项目工作台：在 DSH 里按名字新建项目（建目录 + 生成 AGENTS.md + 注册工作区 + 自动开新对话），并随时编辑项目基础指令、挂载要带进每次对话的项目文件。",
+    "keywords":  [
+                     "deepseek-harness",
+                     "dsh",
+                     "plugin",
+                     "project",
+                     "agents-md",
+                     "instructions"
+                 ],
+    "type":  "module",
+    "main":  "lib/index.js",
+    "engines":  {
+                    "node":  "\u003e=22"
+                },
+    "exports":  {
+                    ".":  {
+                              "default":  "./lib/index.js"
+                          },
+                    "./client":  {
+                                     "default":  "./lib/client.js"
+                                 },
+                    "./cordis.patch.yml":  "./cordis.patch.yml",
+                    "./package.json":  "./package.json"
+                },
+    "files":  [
+                  "lib/index.js",
+                  "lib/client.js",
+                  "lib/picker.ps1",
+                  "cordis.patch.yml",
+                  "README.md",
+                  "LICENSE"
+              ],
+    "dsh":  {
+                "bundle":  {
+                               "patch":  "./cordis.patch.yml"
+                           },
+                "client":  {
+                               "inject":  [
+                                              "@deepseek-ai/dsh-client-runtime",
+                                              "@deepseek-ai/dsh-client-store"
+                                          ],
+                               "platform":  "web"
+                           }
+            },
+    "peerDependencies":  {
+                             "@deepseek-ai/cordis":  "^4.0.1"
+                         },
+    "author":  "mocaran (林云)",
+    "license":  "MIT",
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://github.com/mocaran/dsh-project-desk.git"
+                   },
+    "homepage":  "https://github.com/mocaran/dsh-project-desk#readme",
+    "bugs":  {
+                 "url":  "https://github.com/mocaran/dsh-project-desk/issues"
+             },
+    "private":  false
+}
