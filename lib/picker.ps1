@@ -19,7 +19,12 @@ using System.Runtime.InteropServices;
 [ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")]
 internal class FileOpenDialog { }
 
-[ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+// 注意 IID：必须具备 IFileOpenDialog 的 IID（d57c7288-…），而不能用 IFileDialog 的
+// 42f85136-…。两个接口的 vtable 前 24 个方法一样，但 GetResults / GetSelectedItems
+// 是 IFileOpenDialog 才有的第 25、26 个槽；如果声明成 IFileDialog 的 GUID，取消时
+// 看不出问题（不碰这两个方法），一旦点「打开」确定，调用 GetResults 就会踩到非法槽位，
+// PowerShell 抛异常 → 结果文件没写 → host 当成「用户取消」→ 面板显示「没有选择文件」。
+[ComImport, Guid("d57c7288-d4ad-4768-be02-9d969532d960"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IFileOpenDialog
 {
     [PreserveSig] int Show(IntPtr parent);
@@ -96,7 +101,11 @@ public static class DeskPicker
         SetProcessDPIAware();
 
         bool folderMode = string.Equals(mode, "folder", StringComparison.OrdinalIgnoreCase);
-        var dialog = (IFileOpenDialog)new FileOpenDialog();
+        // 用 CLSID 晚绑定拿 COM 对象，再 QI 到 IFileOpenDialog（IID d57c7288）。
+        // 不要写成 (IFileOpenDialog)new FileOpenDialog()：那样用的是 ComImport 类的强转路径，
+        // 一旦 IID 不对就会在点「打开」确定后抛异常，表现成「点了确认却什么也没选中」。
+        object comObject = Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")));
+        var dialog = (IFileOpenDialog)comObject;
 
         uint options = FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST;
         options |= folderMode ? FOS_PICKFOLDERS : (FOS_ALLOWMULTISELECT | FOS_FILEMUSTEXIST);
